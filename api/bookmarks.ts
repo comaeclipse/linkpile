@@ -43,6 +43,17 @@ const parseBody = async <T>(req: IncomingMessage): Promise<T | null> => {
 };
 
 export default async function handler(req: Req, res: Res) {
+  // Add CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  
+  if (req.method === "OPTIONS") {
+    res.statusCode = 200;
+    res.end();
+    return;
+  }
+
   const method = req.method || "GET";
   const id = new URL(req.url || "", "http://localhost").searchParams.get("id");
 
@@ -98,8 +109,12 @@ export default async function handler(req: Req, res: Res) {
     }
 
     return send(res, 405, { error: "Method not allowed" });
-  } catch (err) {
+  } catch (err: any) {
     console.error("API error", err);
-    return send(res, 500, { error: "Internal Server Error" });
+    return send(res, 500, { 
+      error: "Internal Server Error", 
+      message: err?.message || String(err),
+      stack: process.env.NODE_ENV !== "production" ? err?.stack : undefined
+    });
   }
 }
