@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Bookmark } from '../types';
 
 interface BookmarkListProps {
@@ -6,9 +6,44 @@ interface BookmarkListProps {
   onTagClick: (tag: string) => void;
   onDelete: (id: string) => void;
   onToggleRead: (id: string, isRead: boolean) => void;
+  onEdit: (id: string, title: string, tags: string[]) => void;
 }
 
-export const BookmarkList: React.FC<BookmarkListProps> = ({ bookmarks, onTagClick, onDelete, onToggleRead }) => {
+export const BookmarkList: React.FC<BookmarkListProps> = ({ bookmarks, onTagClick, onDelete, onToggleRead, onEdit }) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editTags, setEditTags] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const startEdit = (bm: Bookmark) => {
+    setEditingId(bm.id);
+    setEditTitle(bm.title);
+    setEditTags(bm.tags.join(' '));
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditTitle('');
+    setEditTags('');
+    setIsSaving(false);
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!editTitle.trim()) return;
+    setIsSaving(true);
+    const tags = editTags
+      .toLowerCase()
+      .split(/\s+/)
+      .map(t => t.trim())
+      .filter(Boolean);
+    try {
+      await onEdit(id, editTitle.trim(), tags);
+      cancelEdit();
+    } catch {
+      setIsSaving(false);
+    }
+  };
+
   if (bookmarks.length === 0) {
     return (
       <div className="text-center p-10 text-gray-400">
@@ -79,6 +114,14 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({ bookmarks, onTagClic
               </button>
             )}
 
+            <button
+              onClick={() => startEdit(bm)}
+              className="ml-2 text-blue-500 hover:text-blue-700 hover:underline decoration-dotted"
+              title="Edit bookmark"
+            >
+              edit
+            </button>
+
             <button 
               onClick={() => onDelete(bm.id)}
               className="ml-2 text-red-300 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -87,6 +130,40 @@ export const BookmarkList: React.FC<BookmarkListProps> = ({ bookmarks, onTagClic
               delete
             </button>
           </div>
+
+          {editingId === bm.id && (
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded shadow-sm space-y-2 animate-fade-in">
+              <div className="text-xs text-blue-900 font-bold uppercase tracking-wide">Edit bookmark</div>
+              <label className="block text-xs text-blue-800 font-semibold mb-1">Title</label>
+              <input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="w-full border border-blue-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+              <label className="block text-xs text-blue-800 font-semibold mb-1">Tags (space separated)</label>
+              <input
+                value={editTags}
+                onChange={(e) => setEditTags(e.target.value)}
+                className="w-full border border-blue-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                placeholder="news tech webdev..."
+              />
+              <div className="flex gap-2 justify-end pt-1">
+                <button
+                  onClick={cancelEdit}
+                  className="text-xs text-blue-500 hover:text-blue-700 hover:underline px-2 py-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => saveEdit(bm.id)}
+                  disabled={isSaving}
+                  className="text-xs bg-blue-600 text-white px-3 py-1 rounded shadow-sm hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          )}
         </li>
       ))}
     </ul>

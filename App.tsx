@@ -87,6 +87,19 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleEditBookmark = async (id: string, title: string, tags: string[]) => {
+    const previous = bookmarks;
+    setBookmarks(prev => prev.map(b => b.id === id ? { ...b, title, tags } : b));
+
+    try {
+      await bookmarkService.updateBookmark(id, { title, tags });
+    } catch (error) {
+      console.error("Failed to update bookmark", error);
+      setBookmarks(previous);
+      alert("Failed to update bookmark.");
+    }
+  };
+
   const filteredBookmarks = useMemo(() => {
     if (!activeTag) return bookmarks;
     return bookmarks.filter(bm => bm.tags.includes(activeTag));
@@ -156,6 +169,7 @@ export const App: React.FC = () => {
                   onTagClick={setActiveTag} 
                   onDelete={handleDeleteBookmark}
                   onToggleRead={handleToggleRead}
+                  onEdit={handleEditBookmark}
                 />
               )}
             </>
