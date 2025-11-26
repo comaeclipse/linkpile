@@ -1,10 +1,19 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { SuggestionResponse } from "../types";
 
+const getGeminiApiKey = () => {
+  // Prefer Vite-exposed key, but allow process.env for non-browser contexts
+  return (
+    (typeof import.meta !== "undefined" ? import.meta.env.VITE_GEMINI_API_KEY : undefined) ||
+    process.env.GEMINI_API_KEY ||
+    process.env.API_KEY
+  );
+};
+
 const createClient = () => {
-  const apiKey = process.env.API_KEY;
+  const apiKey = getGeminiApiKey();
   if (!apiKey) {
-    console.warn("API_KEY is not set. AI features will be disabled.");
+    console.warn("GEMINI_API_KEY is not set. AI features will be disabled.");
     return null;
   }
   return new GoogleGenAI({ apiKey });
@@ -115,13 +124,7 @@ export const suggestTagsAndDescription = async (
       2. DESCRIPTION:
          - If the 'Scraped Meta Description' is available and good, USE IT (or a slightly shortened version).
          - If 'Scraped Body Content' is available, summarize it in 1 sentence.
-         - If 'CONTENT_UNAVAILABLE', use the URL (Domain) and Title to infer a concise description (e.g., "Official documentation for [Tech Name]").
-         - Keep it under 200 characters.
-
-      3. SUGGESTED TITLE:
-         - If the 'Scraped Title' is available, use it.
-         - Otherwise, use the 'User Title'.
-         - If neither, try to infer a title from the URL.
+         - CRITICAL: If 'CONTENT_UNAVAILABLE', DO NOT HALLUCINATE. Do not say "This page likely discusses...". Return an EMPTY STRING for the description if you don't have data.
 
       OUTPUT FORMAT: JSON
     `;
@@ -139,10 +142,6 @@ export const suggestTagsAndDescription = async (
               items: { type: Type.STRING },
             },
             suggestedDescription: {
-              type: Type.STRING,
-              nullable: true,
-            },
-            suggestedTitle: {
               type: Type.STRING,
               nullable: true,
             },
