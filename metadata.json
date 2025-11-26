@@ -1,0 +1,5 @@
+{
+  "name": "link.pile",
+  "description": "A minimalist social bookmarking clone inspired by del.icio.us. Save, categorize, and discover links with AI-powered tag suggestions.",
+  "requestFramePermissions": []
+}
