@@ -13,8 +13,11 @@ View your app in AI Studio: https://ai.studio/apps/drive/1mHXjRbwxPUlOv8RKyGTuGw
 **Prerequisites:**  Node.js
 
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+1. Install dependencies: `npm install`
+2. Copy `.env.example` to `.env` and fill in:
+   - `GEMINI_API_KEY` (Gemini API key used by the client)
+   - `DATABASE_URL` and `DIRECT_URL` (Neon Postgres connection strings for Prisma)
+3. Generate Prisma client (after the DB URLs are set): `npm run prisma:generate`
+4. Run the app: `npm run dev`
+
+> `.env` and `.env.*` are gitignored so credentials stay local. Rotate the keys that shipped in the previous `.env` if they were ever pushed upstream.
