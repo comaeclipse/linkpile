@@ -62,5 +62,21 @@ export const bookmarkService = {
       const updated = current.filter(b => b.id !== id);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
     }
+  },
+
+  async updateBookmark(id: string, data: Partial<Bookmark>): Promise<void> {
+    try {
+      const res = await fetch(`${API_BASE}/api/bookmarks?id=${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error('Failed to update bookmark');
+    } catch (error) {
+      console.warn('API update failed, persisting locally', error);
+      const current = await this.getBookmarks();
+      const updated = current.map(b => b.id === id ? { ...b, ...data } : b);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+    }
   }
 };
