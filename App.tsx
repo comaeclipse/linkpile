@@ -13,11 +13,28 @@ export const App: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState<'list' | 'organize'>('list');
+  const [dbStatus, setDbStatus] = useState<'checking' | 'connected' | 'local'>('checking');
 
   // Load bookmarks on mount
   useEffect(() => {
     loadBookmarks();
+    checkDbStatus();
   }, []);
+
+  const checkDbStatus = async () => {
+    const API_BASE = import.meta.env.VITE_API_BASE || '';
+    try {
+      const res = await fetch(`${API_BASE}/api/health`);
+      if (res.ok) {
+        const data = await res.json();
+        setDbStatus(data.status === 'connected' ? 'connected' : 'local');
+      } else {
+        setDbStatus('local');
+      }
+    } catch {
+      setDbStatus('local');
+    }
+  };
 
   const loadBookmarks = async () => {
     setIsLoading(true);
@@ -183,8 +200,8 @@ export const App: React.FC = () => {
                 Use the <span className="font-bold">AI Auto-suggest</span> button when adding a link to automatically generate tags and clean up descriptions using Gemini.
               </p>
               <div className="mt-4 pt-4 border-t border-blue-200 text-blue-400">
-                Status: <span className="font-bold text-orange-500">
-                  Local Storage
+                Status: <span className={`font-bold ${dbStatus === 'connected' ? 'text-green-600' : dbStatus === 'checking' ? 'text-gray-400' : 'text-orange-500'}`}>
+                  {dbStatus === 'connected' ? 'Database Connected' : dbStatus === 'checking' ? 'Checking...' : 'Local Storage'}
                 </span>
               </div>
             </div>
