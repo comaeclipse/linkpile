@@ -162,13 +162,8 @@ const extractContent = (html: string): { title: string; textSample: string } => 
   return { title, textSample };
 };
 
-const tagContent = async (input: { content: string; title: string; url: string }): Promise<TagResult> => {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is required to generate tags");
-  }
-
-  const openai = new OpenAI({ apiKey });
+const tagContent = async (input: { content: string; title: string; url: string; apiKey: string }): Promise<TagResult> => {
+  const openai = new OpenAI({ apiKey: input.apiKey });
 
   const prompt = [
     "You are a concise tagging assistant in the style of old del.icio.us bookmarks.",
@@ -231,10 +226,16 @@ export default async function handler(req: Req, res: Res) {
     const { title: scrapedTitle, textSample } = extractContent(html);
     const title = providedTitle || scrapedTitle || "Untitled";
 
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return send(res, 500, { error: "OPENAI_API_KEY is required on the server" });
+    }
+
     const tagging = await tagContent({
       content: textSample,
       title,
       url: targetUrl,
+      apiKey,
     });
 
     return send(res, 200, {
