@@ -17,28 +17,21 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
   // Auto-fetch title when URL changes
   useEffect(() => {
     if (!url || !url.startsWith('http') || title) return;
-    
+
     const fetchTitle = async () => {
       setIsFetchingTitle(true);
       try {
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-        
-        const response = await fetch(proxyUrl, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        
+        const API_BASE = import.meta.env.VITE_API_BASE || '';
+        const response = await fetch(
+          `${API_BASE}/api/fetch-title?url=${encodeURIComponent(url)}`,
+          { signal: AbortSignal.timeout(12000) }
+        );
+
         if (!response.ok) return;
-        
+
         const data = await response.json();
-        const html = data.contents;
-        if (!html) return;
-        
-        // Parse to get title
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const pageTitle = doc.title || doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
-        
+        const pageTitle = data.title || '';
+
         if (pageTitle && !title) {
           setTitle(pageTitle.trim());
         }
