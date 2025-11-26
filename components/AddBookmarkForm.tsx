@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { suggestTagsAndDescription } from '../services/geminiService';
+import { suggestTagsOpenAI } from '../services/openaiService';
 
 interface AddBookmarkFormProps {
   onAdd: (url: string, title: string, description: string, tags: string[]) => void;
@@ -48,27 +48,23 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
 
   const handleAutoSuggest = useCallback(async () => {
     if (!url && !title) return;
-    
+
     setIsAnalyzing(true);
     try {
-      const result = await suggestTagsAndDescription(url, title, description);
-      
+      const result = await suggestTagsOpenAI(url, title);
+
       if (result.tags && result.tags.length > 0) {
         // Merge with existing tags, unique only
         const currentTags = tagsStr.split(' ').filter(t => t.trim() !== '');
         const newTags = Array.from(new Set([...currentTags, ...result.tags]));
         setTagsStr(newTags.join(' '));
       }
-      
-      if (result.suggestedDescription && !description) {
-        setDescription(result.suggestedDescription);
-      }
     } catch (e) {
       console.error("AI suggestion failed", e);
     } finally {
       setIsAnalyzing(false);
     }
-  }, [url, title, description, tagsStr]);
+  }, [url, title, tagsStr]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
