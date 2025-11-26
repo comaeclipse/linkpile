@@ -1,5 +1,4 @@
 import { Bookmark } from '../types';
-import { INITIAL_BOOKMARKS } from '../constants';
 
 const LOCAL_STORAGE_KEY = 'link.pile.bookmarks';
 const API_BASE = import.meta.env.VITE_API_BASE || '';
@@ -13,7 +12,7 @@ export const bookmarkService = {
     } catch (error) {
       console.warn('API fetch failed, falling back to local storage', error);
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : INITIAL_BOOKMARKS;
+      return saved ? JSON.parse(saved) : [];
     }
   },
 

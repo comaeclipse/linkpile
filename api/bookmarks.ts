@@ -1,6 +1,20 @@
 import { IncomingMessage, ServerResponse } from "http";
-import { prisma } from "../services/prismaClient";
-import { Bookmark } from "../types";
+import { PrismaClient } from "@prisma/client";
+
+// Inline Prisma client for Vercel serverless functions
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+const prisma = globalForPrisma.prisma || new PrismaClient();
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+
+interface Bookmark {
+  id: string;
+  url: string;
+  title: string;
+  description?: string;
+  tags?: string[];
+  createdAt?: number;
+  isRead?: boolean;
+}
 
 type Req = IncomingMessage & { method?: string; url?: string };
 type Res = ServerResponse & { status?: (code: number) => Res };
