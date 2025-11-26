@@ -1,5 +1,3 @@
-import { supabase, isDbConnected } from './supabaseClient';
-
 const DB_KEY = 'organizer_data';
 const LS_KEYS = {
   TABS: 'link.pile.tabs',
@@ -15,28 +13,10 @@ export interface LayoutData {
 
 export const layoutService = {
   /**
-   * Loads layout data from Supabase, falling back to LocalStorage if offline/empty.
+   * Loads layout data from LocalStorage.
    */
   async load(): Promise<LayoutData | null> {
-    // 1. Try Database
-    if (isDbConnected && supabase) {
-      try {
-        const { data, error } = await supabase
-          .from('app_state')
-          .select('value')
-          .eq('key', DB_KEY)
-          .single();
-        
-        if (data && data.value) {
-          // Found data in DB
-          return data.value as LayoutData;
-        }
-      } catch (e) {
-        console.warn("Failed to load layout from DB, falling back to local storage", e);
-      }
-    }
-    
-    // 2. Fallback to Local Storage (Legacy data or offline)
+    // Local Storage (Legacy data or offline)
     const tabs = localStorage.getItem(LS_KEYS.TABS);
     const widgets = localStorage.getItem(LS_KEYS.WIDGETS);
     const positions = localStorage.getItem(LS_KEYS.POSITIONS);
@@ -53,24 +33,12 @@ export const layoutService = {
   },
 
   /**
-   * Saves layout data to both LocalStorage (for speed/backup) and Supabase.
+   * Saves layout data to LocalStorage.
    */
   async save(data: LayoutData) {
-    // 1. Save to LocalStorage (Instant)
+    // Save to LocalStorage
     localStorage.setItem(LS_KEYS.TABS, JSON.stringify(data.tabs));
     localStorage.setItem(LS_KEYS.WIDGETS, JSON.stringify(data.widgets));
     localStorage.setItem(LS_KEYS.POSITIONS, JSON.stringify(data.positions));
-
-    // 2. Save to DB (Async)
-    if (isDbConnected && supabase) {
-      // Upsert: update if exists, insert if not
-      const { error } = await supabase
-        .from('app_state')
-        .upsert({ key: DB_KEY, value: data }, { onConflict: 'key' });
-        
-      if (error) {
-        console.error("Failed to save layout to DB", error);
-      }
-    }
   }
 };
