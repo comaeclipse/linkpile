@@ -4,57 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>link.pile</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              delicious: {
-                blue: '#0000FF',
-                lightBlue: '#C6D9F1',
-                bg: '#FFFFFF',
-                text: '#333333',
-                meta: '#888888',
-                tag: '#999999',
-              }
-            },
-            fontFamily: {
-              sans: ['Verdana', 'Helvetica', 'Arial', 'sans-serif'],
-            },
-            animation: {
-              ticker: 'ticker 30s linear infinite',
-              'fade-in': 'fadeIn 0.5s ease-in-out',
-            },
-            keyframes: {
-              ticker: {
-                '0%': { transform: 'translateX(0)' },
-                '100%': { transform: 'translateX(-50%)' },
-              },
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
-              }
-            }
-          },
-        },
-      }
-    </script>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.43.1"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
-</head>
-  <body class="bg-white text-delicious-text font-sans antialiased">
+    <link rel="stylesheet" href="/index.css">
+  </head>
+  <body class="bg-white font-sans antialiased">
     <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
-</body>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>

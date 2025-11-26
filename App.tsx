@@ -6,7 +6,6 @@ import { TagCloud } from './components/TagCloud';
 import { Organizer } from './components/Organizer';
 import { Bookmark } from './types';
 import { bookmarkService } from './services/bookmarkService';
-import { isDbConnected } from './services/supabaseClient';
 
 export const App: React.FC = () => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -184,8 +183,8 @@ export const App: React.FC = () => {
                 Use the <span className="font-bold">AI Auto-suggest</span> button when adding a link to automatically generate tags and clean up descriptions using Gemini.
               </p>
               <div className="mt-4 pt-4 border-t border-blue-200 text-blue-400">
-                Status: <span className={isDbConnected ? "font-bold text-green-600" : "font-bold text-orange-500"}>
-                  {isDbConnected ? "Database Connected" : "Local Storage"}
+                Status: <span className="font-bold text-orange-500">
+                  Local Storage
                 </span>
               </div>
             </div>
