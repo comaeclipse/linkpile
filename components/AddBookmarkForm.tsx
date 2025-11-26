@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { suggestTagsAndDescription } from '../services/geminiService';
 
 interface AddBookmarkFormProps {
@@ -12,6 +12,46 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
   const [description, setDescription] = useState('');
   const [tagsStr, setTagsStr] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isFetchingTitle, setIsFetchingTitle] = useState(false);
+
+  // Auto-fetch title when URL changes
+  useEffect(() => {
+    if (!url || !url.startsWith('http') || title) return;
+    
+    const fetchTitle = async () => {
+      setIsFetchingTitle(true);
+      try {
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetch(proxyUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        const html = data.contents;
+        if (!html) return;
+        
+        // Parse to get title
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const pageTitle = doc.title || doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || '';
+        
+        if (pageTitle && !title) {
+          setTitle(pageTitle.trim());
+        }
+      } catch (e) {
+        console.warn('Failed to fetch title:', e);
+      } finally {
+        setIsFetchingTitle(false);
+      }
+    };
+
+    const debounce = setTimeout(fetchTitle, 500);
+    return () => clearTimeout(debounce);
+  }, [url]);
 
   const handleAutoSuggest = useCallback(async () => {
     if (!url && !title) return;
@@ -65,14 +105,16 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
             />
           </div>
           <div className="flex-1">
-            <label className="block text-xs font-bold text-blue-800 mb-1.5">Title</label>
+            <label className="block text-xs font-bold text-blue-800 mb-1.5">
+              Title {isFetchingTitle && <span className="text-blue-400 font-normal">(fetching...)</span>}
+            </label>
             <input 
               required
               type="text" 
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full bg-white border border-blue-200 p-2 text-sm rounded focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-              placeholder="Page Title"
+              placeholder={isFetchingTitle ? "Fetching title..." : "Page Title"}
             />
           </div>
         </div>
