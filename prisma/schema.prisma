@@ -23,6 +23,15 @@ model Bookmark {
   @@index([url])
 }
 
+model Layout {
+  id        String   @id @default("global")
+  tabs      Json     @default("[]")
+  widgets   Json     @default("[]")
+  positions Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // Future: Category and Tag models for relational approach
 // Uncomment and implement when ready to migrate from string[] tags
 //
