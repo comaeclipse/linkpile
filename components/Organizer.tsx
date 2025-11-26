@@ -32,6 +32,8 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
   const [positions, setPositions] = useState<Record<string, Position>>({});
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Drag State
   const [isDragging, setIsDragging] = useState(false);
@@ -164,6 +166,35 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
       persistState(undefined, updated);
     }
   };
+
+  // Add bookmark to active tab (creates/updates position)
+  const addBookmarkToBoard = (bm: Bookmark) => {
+    if (!activeTabId) return;
+    const baseX = 80 + Math.random() * 120;
+    const baseY = 120 + Math.random() * 140;
+    const updatedPositions = {
+      ...positions,
+      [bm.id]: {
+        x: baseX,
+        y: baseY,
+        tabId: activeTabId,
+      },
+    };
+    setPositions(updatedPositions);
+    persistState(undefined, undefined, updatedPositions);
+    setIsAddMenuOpen(false);
+    setSearchQuery('');
+  };
+
+  const recentBookmarks = [...bookmarks]
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    .slice(0, 5);
+
+  const searchResults = searchQuery
+    ? bookmarks
+        .filter((bm) => bm.title.toLowerCase().includes(searchQuery.toLowerCase()))
+        .slice(0, 5)
+    : recentBookmarks;
 
   // Dragging Logic
   const handleMouseDown = (e: React.MouseEvent, id: string, initialX: number, initialY: number) => {
@@ -337,8 +368,46 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
            >
              <span className="text-lg leading-none">+</span> Header
            </button>
-           <span className="text-gray-400">|</span>
-           <span className="text-gray-500 italic">Drag items onto a tab to move them. Double click tab to rename.</span>
+            <div className="relative">
+              <button
+                onClick={() => setIsAddMenuOpen((v) => !v)}
+                className="bg-white border border-blue-200 hover:border-blue-400 text-blue-700 px-3 py-1 rounded shadow-sm font-bold flex items-center gap-1 transition-all active:translate-y-0.5"
+              >
+                <span className="text-lg leading-none">+</span> Add link
+              </button>
+              {isAddMenuOpen && (
+                <div className="absolute z-50 mt-2 w-72 bg-white border border-blue-200 shadow-lg rounded-md p-3 space-y-3">
+                  <div className="text-[11px] text-blue-900 font-bold uppercase tracking-wide">Add to board</div>
+                  <input
+                    autoFocus
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search title..."
+                    className="w-full border border-blue-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  />
+                  <div className="text-[11px] uppercase text-gray-400 font-semibold">
+                    {searchQuery ? 'Matches' : 'Recent'}
+                  </div>
+                  <div className="flex flex-col gap-1 max-h-56 overflow-auto">
+                    {searchResults.length === 0 && (
+                      <div className="text-xs text-gray-400">Nothing to add</div>
+                    )}
+                    {searchResults.map((bm) => (
+                      <button
+                        key={bm.id}
+                        onClick={() => addBookmarkToBoard(bm)}
+                        className="text-left bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded px-2 py-1 text-sm text-blue-900 shadow-sm flex justify-between items-center"
+                      >
+                        <span className="truncate mr-2">{bm.title}</span>
+                        <span className="text-[10px] text-blue-500 uppercase">Add</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <span className="text-gray-400">|</span>
+            <span className="text-gray-500 italic">Drag items onto a tab to move them. Double click tab to rename.</span>
          </div>
          <button 
            onClick={() => {
