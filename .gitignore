@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 generated
+coverage
+*.tsbuildinfo
+.vercel
 *.local
 .env
 .env.*
