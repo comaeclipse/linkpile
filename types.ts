@@ -16,5 +16,4 @@ export interface TagCount {
 export interface SuggestionResponse {
   tags: string[];
   suggestedDescription?: string;
-  suggestedTitle?: string;
 }

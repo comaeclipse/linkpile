@@ -14,7 +14,7 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleAutoSuggest = useCallback(async () => {
-    if (!url) return;
+    if (!url && !title) return;
     
     setIsAnalyzing(true);
     try {
@@ -29,10 +29,6 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
       
       if (result.suggestedDescription && !description) {
         setDescription(result.suggestedDescription);
-      }
-
-      if (result.suggestedTitle && !title) {
-        setTitle(result.suggestedTitle);
       }
     } catch (e) {
       console.error("AI suggestion failed", e);
@@ -98,7 +94,7 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
             <button 
               type="button"
               onClick={handleAutoSuggest}
-              disabled={isAnalyzing || !url}
+              disabled={isAnalyzing || (!url && !title)}
               className={`text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 px-2 py-0.5 rounded transition-colors flex items-center gap-1 ${isAnalyzing ? 'opacity-50 cursor-wait' : ''}`}
             >
               {isAnalyzing ? 'Scanning page...' : '✨ Auto-suggest tags'}
