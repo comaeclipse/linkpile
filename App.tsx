@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { Header } from './components/Header';
-import { AddBookmarkForm } from './components/AddBookmarkForm';
 import { BookmarkList } from './components/BookmarkList';
 import { TagCloud } from './components/TagCloud';
-import { Organizer } from './components/Organizer';
 import { Bookmark } from './types';
 import { bookmarkService } from './services/bookmarkService';
+
+// Lazy load heavier components
+const AddBookmarkForm = lazy(() => import('./components/AddBookmarkForm'));
+const Organizer = lazy(() => import('./components/Organizer'));
 
 export const App: React.FC = () => {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -107,11 +109,11 @@ export const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen bg-white p-4 md:p-6 ${currentView === 'list' ? 'lg:max-w-5xl lg:mx-auto' : ''}`}>
-      <Header 
+      <Header
         onReset={() => {
           setActiveTag(null);
           setCurrentView('list');
-        }} 
+        }}
         currentView={currentView}
         onViewChange={setCurrentView}
       />
@@ -122,20 +124,20 @@ export const App: React.FC = () => {
           {/* Action Bar */}
           <div className="flex justify-between items-center mb-4 bg-gray-50 p-2 rounded border border-gray-100 z-10 relative">
             <div className="text-sm">
-               {activeTag ? (
-                 <>
-                   <span className="text-gray-500">Tag: </span>
-                   <span className="font-bold text-black bg-yellow-100 px-1">{activeTag}</span>
-                   <button 
-                     onClick={() => setActiveTag(null)}
-                     className="ml-2 text-blue-600 text-xs hover:underline"
-                   >(remove)</button>
-                 </>
-               ) : (
-                 <span className="text-gray-500">
-                   {currentView === 'organize' ? 'Whiteboard Mode' : 'All Items'} ({bookmarks.length})
-                 </span>
-               )}
+              {activeTag ? (
+                <>
+                  <span className="text-gray-500">Tag: </span>
+                  <span className="font-bold text-black bg-yellow-100 px-1">{activeTag}</span>
+                  <button
+                    onClick={() => setActiveTag(null)}
+                    className="ml-2 text-blue-600 text-xs hover:underline"
+                  >(remove)</button>
+                </>
+              ) : (
+                <span className="text-gray-500">
+                  {currentView === 'organize' ? 'Whiteboard Mode' : 'All Items'} ({bookmarks.length})
+                </span>
+              )}
             </div>
             {currentView === 'list' && (
               <button
@@ -148,10 +150,12 @@ export const App: React.FC = () => {
           </div>
 
           {showAddForm && currentView === 'list' && (
-            <AddBookmarkForm 
-              onAdd={handleAddBookmark} 
-              onCancel={() => setShowAddForm(false)} 
-            />
+            <Suspense fallback={<div className="p-4 text-center text-gray-400">Loading...</div>}>
+              <AddBookmarkForm
+                onAdd={handleAddBookmark}
+                onCancel={() => setShowAddForm(false)}
+              />
+            </Suspense>
           )}
 
           {isLoading ? (
@@ -162,11 +166,13 @@ export const App: React.FC = () => {
           ) : (
             <>
               {currentView === 'organize' ? (
-                <Organizer bookmarks={filteredBookmarks} />
+                <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading organizer...</div>}>
+                  <Organizer bookmarks={filteredBookmarks} />
+                </Suspense>
               ) : (
-                <BookmarkList 
-                  bookmarks={filteredBookmarks} 
-                  onTagClick={setActiveTag} 
+                <BookmarkList
+                  bookmarks={filteredBookmarks}
+                  onTagClick={setActiveTag}
                   onDelete={handleDeleteBookmark}
                   onToggleRead={handleToggleRead}
                   onEdit={handleEditBookmark}
@@ -179,15 +185,15 @@ export const App: React.FC = () => {
         {/* Right Sidebar (Tag Cloud) - Only show in LIST view */}
         {currentView === 'list' && (
           <aside className="w-full md:w-64 flex-shrink-0">
-            <TagCloud 
-              bookmarks={bookmarks} 
-              activeTag={activeTag} 
+            <TagCloud
+              bookmarks={bookmarks}
+              activeTag={activeTag}
               onTagClick={(tag) => {
                 setActiveTag(tag);
                 setCurrentView('list');
-              }} 
+              }}
             />
-            
+
             <div className="mt-12 bg-blue-50 p-4 rounded text-xs text-blue-800">
               <h4 className="font-bold mb-2">About link.pile</h4>
               <p className="mb-2">

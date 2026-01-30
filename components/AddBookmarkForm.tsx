@@ -84,9 +84,9 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <label className="block text-xs font-bold text-blue-800 mb-1.5">URL</label>
-            <input 
+            <input
               required
-              type="url" 
+              type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               className="w-full bg-white border border-blue-200 p-2 text-sm rounded focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
@@ -97,9 +97,9 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
             <label className="block text-xs font-bold text-blue-800 mb-1.5">
               Title {isFetchingTitle && <span className="text-blue-400 font-normal">(fetching...)</span>}
             </label>
-            <input 
+            <input
               required
-              type="text" 
+              type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full bg-white border border-blue-200 p-2 text-sm rounded focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
@@ -110,8 +110,8 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
 
         <div>
           <label className="block text-xs font-bold text-blue-800 mb-1.5">Description</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full bg-white border border-blue-200 p-2 text-sm rounded focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
@@ -122,7 +122,7 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
         <div>
           <div className="flex justify-between items-center mb-1.5">
             <label className="block text-xs font-bold text-blue-800">Tags (space separated)</label>
-            <button 
+            <button
               type="button"
               onClick={handleAutoSuggest}
               disabled={isAnalyzing || (!url && !title)}
@@ -131,8 +131,8 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
               {isAnalyzing ? 'Scanning page...' : '✨ Auto-suggest tags'}
             </button>
           </div>
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={tagsStr}
             onChange={(e) => setTagsStr(e.target.value)}
             className="w-full bg-white border border-blue-200 p-2 text-sm rounded focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
@@ -141,14 +141,14 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
         </div>
 
         <div className="flex gap-3 mt-2 pt-2 border-t border-blue-100">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="bg-blue-600 text-white text-sm font-bold py-1.5 px-5 rounded shadow-sm hover:bg-blue-700 active:translate-y-0.5 transition-all"
           >
             Save
           </button>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={onCancel}
             className="text-blue-500 text-sm hover:text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded transition-colors"
           >
@@ -159,3 +159,5 @@ export const AddBookmarkForm: React.FC<AddBookmarkFormProps> = ({ onAdd, onCance
     </div>
   );
 };
+
+export default AddBookmarkForm;

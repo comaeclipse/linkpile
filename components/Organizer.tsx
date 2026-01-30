@@ -34,23 +34,23 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Drag State
   const [isDragging, setIsDragging] = useState(false);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [hoveredTabId, setHoveredTabId] = useState<string | null>(null);
-  
+
   // Editing State
   const [editingWidgetId, setEditingWidgetId] = useState<string | null>(null);
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Helper to persist state
   const persistState = useCallback((
-    newTabs: Tab[] = tabs, 
-    newWidgets: Widget[] = widgets, 
+    newTabs: Tab[] = tabs,
+    newWidgets: Widget[] = widgets,
     newPositions: Record<string, Position> = positions
   ) => {
     if (!isLoaded) return; // Don't save before initial load
@@ -65,7 +65,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
   useEffect(() => {
     const init = async () => {
       const data = await layoutService.load();
-      
+
       let initialTabs = data?.tabs || [];
       const initialWidgets = data?.widgets || [];
       const initialPositions = data?.positions || {};
@@ -77,12 +77,12 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
       setTabs(initialTabs);
       setWidgets(initialWidgets);
       setPositions(initialPositions);
-      
+
       // Set active tab if not set or invalid
       if (!initialTabs.find(t => t.id === activeTabId)) {
         setActiveTabId(initialTabs[0].id);
       }
-      
+
       setIsLoaded(true);
     };
     init();
@@ -105,8 +105,8 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
 
       // If no position exists, create one on the first tab
       if (!newPositions[bm.id]) {
-        newPositions[bm.id] = { 
-          x: 20 + (index % 5) * 220, 
+        newPositions[bm.id] = {
+          x: 20 + (index % 5) * 220,
           y: 100 + (Math.floor(index / 5) * 80),
           tabId: currentTabId
         };
@@ -120,7 +120,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
       // but we could if we want strict consistency. 
       // For now, we update local state to show items.
     }
-  }, [bookmarks, isLoaded, tabs]); 
+  }, [bookmarks, isLoaded, tabs]);
 
   // Tab Actions
   const addTab = () => {
@@ -192,8 +192,8 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
 
   const searchResults = searchQuery
     ? bookmarks
-        .filter((bm) => bm.title.toLowerCase().includes(searchQuery.toLowerCase()))
-        .slice(0, 5)
+      .filter((bm) => bm.title.toLowerCase().includes(searchQuery.toLowerCase()))
+      .slice(0, 5)
     : recentBookmarks;
 
   // Dragging Logic
@@ -220,7 +220,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
       const elementUnder = document.elementFromPoint(e.clientX, e.clientY);
       const tabElement = elementUnder?.closest('[data-tab-id]');
       const targetTabId = tabElement?.getAttribute('data-tab-id');
-      
+
       if (targetTabId && targetTabId !== activeTabId) {
         setHoveredTabId(targetTabId);
       } else {
@@ -245,7 +245,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
     const handleMouseUp = (e: MouseEvent) => {
       if (isDragging && dragId) {
         setIsDragging(false);
-        
+
         // CHECK DROP TARGET (TABS)
         const elementUnder = document.elementFromPoint(e.clientX, e.clientY);
         const tabElement = elementUnder?.closest('[data-tab-id]');
@@ -257,7 +257,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
         // Move to new tab?
         if (targetTabId && targetTabId !== activeTabId) {
           if (dragId.startsWith('w-')) {
-            finalWidgets = widgets.map(w => 
+            finalWidgets = widgets.map(w =>
               w.id === dragId ? { ...w, tabId: targetTabId, x: 20, y: 20 } : w
             );
             setWidgets(finalWidgets);
@@ -276,7 +276,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
             // positions already updated by mousemove
           }
         }
-        
+
         // SAVE TO DB
         persistState(tabs, finalWidgets, finalPositions);
 
@@ -314,118 +314,118 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
 
   return (
     <div className="animate-fade-in flex flex-col h-[calc(100vh-150px)]">
-       {/* Tab Bar */}
-       <div className="bg-blue-50 pt-2 px-2 flex items-end gap-1 border-b border-blue-200">
-         {tabs.map(tab => (
-           <div 
-             key={tab.id}
-             data-tab-id={tab.id}
-             className={`
+      {/* Tab Bar */}
+      <div className="bg-blue-50 pt-2 px-2 flex items-end gap-1 border-b border-blue-200">
+        {tabs.map(tab => (
+          <div
+            key={tab.id}
+            data-tab-id={tab.id}
+            className={`
                group px-4 py-2 rounded-t text-sm font-bold cursor-pointer select-none relative
                transition-colors
                ${activeTabId === tab.id ? 'bg-white text-blue-800 border-t border-l border-r border-blue-200 shadow-sm z-10' : 'bg-blue-100 text-blue-500 hover:bg-blue-200'}
                ${hoveredTabId === tab.id ? '!bg-green-100 !text-green-800 ring-2 ring-inset ring-green-300' : ''}
              `}
-             onClick={() => setActiveTabId(tab.id)}
-             onDoubleClick={() => setEditingTabId(tab.id)}
-           >
-             {editingTabId === tab.id ? (
-               <input 
-                 autoFocus
-                 className="bg-transparent outline-none min-w-[50px] w-full"
-                 defaultValue={tab.name}
-                 onBlur={(e) => updateTabName(tab.id, e.target.value)}
-                 onKeyDown={(e) => { if(e.key === 'Enter') updateTabName(tab.id, e.currentTarget.value) }}
-               />
-             ) : (
-               <span>{tab.name}</span>
-             )}
-             
-             {/* Drop Hint */}
-             {hoveredTabId === tab.id && (
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none">
-                  Drop to move here
-                </div>
-             )}
-           </div>
-         ))}
-         
-         <button 
-           onClick={addTab}
-           className="ml-1 mb-1 p-1 rounded hover:bg-blue-200 text-blue-400 font-bold"
-           title="Create new tab"
-         >
-           +
-         </button>
-       </div>
+            onClick={() => setActiveTabId(tab.id)}
+            onDoubleClick={() => setEditingTabId(tab.id)}
+          >
+            {editingTabId === tab.id ? (
+              <input
+                autoFocus
+                className="bg-transparent outline-none min-w-[50px] w-full"
+                defaultValue={tab.name}
+                onBlur={(e) => updateTabName(tab.id, e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') updateTabName(tab.id, e.currentTarget.value) }}
+              />
+            ) : (
+              <span>{tab.name}</span>
+            )}
 
-       {/* Toolbar */}
-       <div className="bg-white p-2 text-xs text-blue-800 flex justify-between items-center border-b border-gray-100 shadow-sm">
-         <div className="flex items-center gap-4">
-           <button 
-             onClick={addWidget}
-             className="bg-white border border-blue-200 hover:border-blue-400 text-blue-700 px-3 py-1 rounded shadow-sm font-bold flex items-center gap-1 transition-all active:translate-y-0.5"
-           >
-             <span className="text-lg leading-none">+</span> Header
-           </button>
-            <div className="relative">
-              <button
-                onClick={() => setIsAddMenuOpen((v) => !v)}
-                className="bg-white border border-blue-200 hover:border-blue-400 text-blue-700 px-3 py-1 rounded shadow-sm font-bold flex items-center gap-1 transition-all active:translate-y-0.5"
-              >
-                <span className="text-lg leading-none">+</span> Add link
-              </button>
-              {isAddMenuOpen && (
-                <div className="absolute z-50 mt-2 w-72 bg-white border border-blue-200 shadow-lg rounded-md p-3 space-y-3">
-                  <div className="text-[11px] text-blue-900 font-bold uppercase tracking-wide">Add to board</div>
-                  <input
-                    autoFocus
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search title..."
-                    className="w-full border border-blue-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-                  />
-                  <div className="text-[11px] uppercase text-gray-400 font-semibold">
-                    {searchQuery ? 'Matches' : 'Recent'}
-                  </div>
-                  <div className="flex flex-col gap-1 max-h-56 overflow-auto">
-                    {searchResults.length === 0 && (
-                      <div className="text-xs text-gray-400">Nothing to add</div>
-                    )}
-                    {searchResults.map((bm) => (
-                      <button
-                        key={bm.id}
-                        onClick={() => addBookmarkToBoard(bm)}
-                        className="text-left bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded px-2 py-1 text-sm text-blue-900 shadow-sm flex justify-between items-center"
-                      >
-                        <span className="truncate mr-2">{bm.title}</span>
-                        <span className="text-[10px] text-blue-500 uppercase">Add</span>
-                      </button>
-                    ))}
-                  </div>
+            {/* Drop Hint */}
+            {hoveredTabId === tab.id && (
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none">
+                Drop to move here
+              </div>
+            )}
+          </div>
+        ))}
+
+        <button
+          onClick={addTab}
+          className="ml-1 mb-1 p-1 rounded hover:bg-blue-200 text-blue-400 font-bold"
+          title="Create new tab"
+        >
+          +
+        </button>
+      </div>
+
+      {/* Toolbar */}
+      <div className="bg-white p-2 text-xs text-blue-800 flex justify-between items-center border-b border-gray-100 shadow-sm">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={addWidget}
+            className="bg-white border border-blue-200 hover:border-blue-400 text-blue-700 px-3 py-1 rounded shadow-sm font-bold flex items-center gap-1 transition-all active:translate-y-0.5"
+          >
+            <span className="text-lg leading-none">+</span> Header
+          </button>
+          <div className="relative">
+            <button
+              onClick={() => setIsAddMenuOpen((v) => !v)}
+              className="bg-white border border-blue-200 hover:border-blue-400 text-blue-700 px-3 py-1 rounded shadow-sm font-bold flex items-center gap-1 transition-all active:translate-y-0.5"
+            >
+              <span className="text-lg leading-none">+</span> Add link
+            </button>
+            {isAddMenuOpen && (
+              <div className="absolute z-50 mt-2 w-72 bg-white border border-blue-200 shadow-lg rounded-md p-3 space-y-3">
+                <div className="text-[11px] text-blue-900 font-bold uppercase tracking-wide">Add to board</div>
+                <input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search title..."
+                  className="w-full border border-blue-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                />
+                <div className="text-[11px] uppercase text-gray-400 font-semibold">
+                  {searchQuery ? 'Matches' : 'Recent'}
                 </div>
-              )}
-            </div>
-            <span className="text-gray-400">|</span>
-            <span className="text-gray-500 italic">Drag items onto a tab to move them. Double click tab to rename.</span>
-         </div>
-         <button 
-           onClick={() => {
-             if(confirm('Reset all positions, tabs, and headers?')) {
-               localStorage.removeItem('link.pile.tabs');
-               localStorage.removeItem('link.pile.whiteboardWidgets');
-               localStorage.removeItem('link.pile.whiteboardPositions');
-               window.location.reload(); 
-             }
-           }}
-           className="text-blue-400 hover:text-red-500 hover:underline"
-         >
-           reset board
-         </button>
-       </div>
-       
-       {/* Canvas */}
-      <div 
+                <div className="flex flex-col gap-1 max-h-56 overflow-auto">
+                  {searchResults.length === 0 && (
+                    <div className="text-xs text-gray-400">Nothing to add</div>
+                  )}
+                  {searchResults.map((bm) => (
+                    <button
+                      key={bm.id}
+                      onClick={() => addBookmarkToBoard(bm)}
+                      className="text-left bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded px-2 py-1 text-sm text-blue-900 shadow-sm flex justify-between items-center"
+                    >
+                      <span className="truncate mr-2">{bm.title}</span>
+                      <span className="text-[10px] text-blue-500 uppercase">Add</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <span className="text-gray-400">|</span>
+          <span className="text-gray-500 italic">Drag items onto a tab to move them. Double click tab to rename.</span>
+        </div>
+        <button
+          onClick={() => {
+            if (confirm('Reset all positions, tabs, and headers?')) {
+              localStorage.removeItem('link.pile.tabs');
+              localStorage.removeItem('link.pile.whiteboardWidgets');
+              localStorage.removeItem('link.pile.whiteboardPositions');
+              window.location.reload();
+            }
+          }}
+          className="text-blue-400 hover:text-red-500 hover:underline"
+        >
+          reset board
+        </button>
+      </div>
+
+      {/* Canvas */}
+      <div
         ref={containerRef}
         className="flex-1 bg-white relative overflow-hidden shadow-inner cursor-crosshair"
         style={{
@@ -441,7 +441,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
             className={`absolute group ${editingWidgetId === w.id ? 'z-50' : ''}`}
           >
             {editingWidgetId === w.id ? (
-              <input 
+              <input
                 autoFocus
                 className="text-xl font-bold text-blue-900 bg-white border-2 border-blue-400 outline-none px-2 py-1 rounded shadow-lg min-w-[200px]"
                 defaultValue={w.text}
@@ -451,7 +451,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
                 }}
               />
             ) : (
-              <div 
+              <div
                 onMouseDown={(e) => handleMouseDown(e, w.id, w.x, w.y)}
                 onDoubleClick={() => setEditingWidgetId(w.id)}
                 className={`
@@ -497,12 +497,12 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
                 {bm.title}
               </div>
               <div className="text-[9px] text-gray-400 truncate pointer-events-none mt-1 flex gap-1">
-                 <img 
-                   src={`https://www.google.com/s2/favicons?domain=${new URL(bm.url).hostname}`} 
-                   alt="" 
-                   className="w-3 h-3 opacity-50"
-                 />
-                 {new URL(bm.url).hostname}
+                <img
+                  src={`https://www.google.com/s2/favicons?domain=${new URL(bm.url).hostname}`}
+                  alt=""
+                  className="w-3 h-3 opacity-50"
+                />
+                {new URL(bm.url).hostname}
               </div>
             </div>
           );
@@ -511,3 +511,5 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
     </div>
   );
 };
+
+export default Organizer;
