@@ -603,9 +603,10 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
               </div>
               <div className="text-[9px] text-gray-400 truncate pointer-events-none mt-1 flex gap-1">
                 <img
-                  src={`/api/favicon?url=${encodeURIComponent(bm.url)}`}
+                  src={`${new URL(bm.url).origin}/favicon.ico`}
                   alt=""
                   className="w-3 h-3 opacity-50"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
                 {new URL(bm.url).hostname}
               </div>
@@ -642,9 +643,10 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
                 </div>
                 <div className="text-[9px] text-gray-400 truncate pointer-events-none mt-1 flex gap-1">
                   <img
-                    src={`/api/favicon?url=${encodeURIComponent(link.url)}`}
+                    src={`${new URL(link.url).origin}/favicon.ico`}
                     alt=""
                     className="w-3 h-3 opacity-50"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                   {new URL(link.url).hostname}
                 </div>
