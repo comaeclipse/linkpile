@@ -25,15 +25,25 @@ interface Tab {
   name: string;
 }
 
+interface CustomLink {
+  id: string;
+  url: string;
+  title: string;
+}
+
 export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
   // State
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string>('');
   const [positions, setPositions] = useState<Record<string, Position>>({});
   const [widgets, setWidgets] = useState<Widget[]>([]);
+  const [customLinks, setCustomLinks] = useState<CustomLink[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCustomLinkDialog, setShowCustomLinkDialog] = useState(false);
+  const [customUrl, setCustomUrl] = useState('');
+  const [customTitle, setCustomTitle] = useState('');
 
   // Drag State
   const [isDragging, setIsDragging] = useState(false);
@@ -51,15 +61,17 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
   const persistState = useCallback((
     newTabs: Tab[] = tabs,
     newWidgets: Widget[] = widgets,
-    newPositions: Record<string, Position> = positions
+    newPositions: Record<string, Position> = positions,
+    newCustomLinks: CustomLink[] = customLinks
   ) => {
     if (!isLoaded) return; // Don't save before initial load
     layoutService.save({
       tabs: newTabs,
       widgets: newWidgets,
-      positions: newPositions
+      positions: newPositions,
+      customLinks: newCustomLinks
     });
-  }, [tabs, widgets, positions, isLoaded]);
+  }, [tabs, widgets, positions, customLinks, isLoaded]);
 
   // 1. Initial Load from DB/Storage
   useEffect(() => {
@@ -69,6 +81,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
       let initialTabs = data?.tabs || [];
       const initialWidgets = data?.widgets || [];
       const initialPositions = data?.positions || {};
+      const initialCustomLinks = data?.customLinks || [];
 
       if (initialTabs.length === 0) {
         initialTabs = [{ id: 'main', name: 'Main Board' }];
@@ -77,6 +90,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
       setTabs(initialTabs);
       setWidgets(initialWidgets);
       setPositions(initialPositions);
+      setCustomLinks(initialCustomLinks);
 
       // Set active tab if not set or invalid
       if (!initialTabs.find(t => t.id === activeTabId)) {
@@ -184,6 +198,39 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
     persistState(undefined, undefined, updatedPositions);
     setIsAddMenuOpen(false);
     setSearchQuery('');
+  };
+
+  // Add custom link (whiteboard-only bookmark)
+  const addCustomLink = () => {
+    if (!customUrl.trim() || !activeTabId) return;
+
+    try {
+      new URL(customUrl); // Validate URL
+    } catch {
+      alert('Please enter a valid URL');
+      return;
+    }
+
+    const newLink: CustomLink = {
+      id: `custom-${Date.now()}`,
+      url: customUrl,
+      title: customTitle.trim() || new URL(customUrl).hostname
+    };
+
+    const baseX = 80 + Math.random() * 120;
+    const baseY = 120 + Math.random() * 140;
+    const updatedCustomLinks = [...customLinks, newLink];
+    const updatedPositions = {
+      ...positions,
+      [newLink.id]: { x: baseX, y: baseY, tabId: activeTabId }
+    };
+
+    setCustomLinks(updatedCustomLinks);
+    setPositions(updatedPositions);
+    persistState(undefined, undefined, updatedPositions, updatedCustomLinks);
+    setShowCustomLinkDialog(false);
+    setCustomUrl('');
+    setCustomTitle('');
   };
 
   const recentBookmarks = [...bookmarks]
@@ -406,6 +453,14 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
               </div>
             )}
           </div>
+
+          {/* Custom Link Button */}
+          <button
+            onClick={() => setShowCustomLinkDialog(true)}
+            className="bg-white border border-blue-200 hover:border-blue-400 text-blue-700 px-3 py-1 rounded shadow-sm font-bold flex items-center gap-1 transition-all active:translate-y-0.5"
+          >
+            <span className="text-lg leading-none">+</span> Add custom link
+          </button>
           <span className="text-gray-400">|</span>
           <span className="text-gray-500 italic">Drag items onto a tab to move them. Double click tab to rename.</span>
         </div>
@@ -423,6 +478,56 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
           reset board
         </button>
       </div>
+
+      {/* Custom Link Dialog */}
+      {showCustomLinkDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-96">
+            <h3 className="text-lg font-bold text-blue-900 mb-4">Add Custom Link</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">URL *</label>
+                <input
+                  autoFocus
+                  type="text"
+                  value={customUrl}
+                  onChange={(e) => setCustomUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Title (optional)</label>
+                <input
+                  type="text"
+                  value={customTitle}
+                  onChange={(e) => setCustomTitle(e.target.value)}
+                  placeholder="Leave empty to use domain name"
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={addCustomLink}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold"
+              >
+                Add to Board
+              </button>
+              <button
+                onClick={() => {
+                  setShowCustomLinkDialog(false);
+                  setCustomUrl('');
+                  setCustomTitle('');
+                }}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded font-semibold"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Canvas */}
       <div
@@ -498,7 +603,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
               </div>
               <div className="text-[9px] text-gray-400 truncate pointer-events-none mt-1 flex gap-1">
                 <img
-                  src={`https://www.google.com/s2/favicons?domain=${new URL(bm.url).hostname}`}
+                  src={`/api/favicon?url=${encodeURIComponent(bm.url)}`}
                   alt=""
                   className="w-3 h-3 opacity-50"
                 />
@@ -507,6 +612,45 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
             </div>
           );
         })}
+
+        {/* Render Custom Links */}
+        {customLinks
+          .filter(link => {
+            const pos = positions[link.id];
+            return pos?.tabId === activeTabId || (!pos?.tabId && activeTabId === tabs[0]?.id);
+          })
+          .map((link) => {
+            const pos = positions[link.id] || { x: 0, y: 0 };
+            return (
+              <div
+                key={link.id}
+                onMouseDown={(e) => handleMouseDown(e, link.id, pos.x, pos.y)}
+                style={{
+                  left: pos.x,
+                  top: pos.y,
+                  zIndex: dragId === link.id ? 50 : 20
+                }}
+                className={`
+                  absolute cursor-move select-none
+                  bg-white border border-purple-300 shadow-sm hover:shadow-md
+                  rounded px-3 py-2 w-[200px] transition-shadow
+                  ${dragId === link.id ? 'shadow-lg scale-105 border-purple-400' : ''}
+                `}
+              >
+                <div className="text-xs font-bold text-purple-800 truncate pointer-events-none">
+                  {link.title}
+                </div>
+                <div className="text-[9px] text-gray-400 truncate pointer-events-none mt-1 flex gap-1">
+                  <img
+                    src={`/api/favicon?url=${encodeURIComponent(link.url)}`}
+                    alt=""
+                    className="w-3 h-3 opacity-50"
+                  />
+                  {new URL(link.url).hostname}
+                </div>
+              </div>
+            );
+          })}
       </div>
     </div>
   );

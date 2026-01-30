@@ -10,6 +10,11 @@ export interface LayoutData {
   tabs: any[];
   widgets: any[];
   positions: Record<string, any>;
+  customLinks?: Array<{
+    id: string;
+    url: string;
+    title: string;
+  }>;
 }
 
 export const layoutService = {

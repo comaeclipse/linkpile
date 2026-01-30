@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Bookmark {
@@ -24,12 +23,24 @@ model Bookmark {
 }
 
 model Layout {
-  id        String   @id @default("global")
-  tabs      Json     @default("[]")
-  widgets   Json     @default("[]")
-  positions Json     @default("{}")
+  id          String   @id @default("global")
+  tabs        Json     @default("[]")
+  widgets     Json     @default("[]")
+  positions   Json     @default("{}")
+  customLinks Json     @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Favicon {
+  id        String   @id @default(uuid())
+  domain    String   @unique
+  dataUri   String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  expiresAt DateTime
+
+  @@index([domain])
+  @@index([expiresAt])
 }
 
 // Future: Category and Tag models for relational approach

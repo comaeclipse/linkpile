@@ -9,6 +9,11 @@ interface LayoutPayload {
   tabs: any[];
   widgets: any[];
   positions: Record<string, any>;
+  customLinks?: Array<{
+    id: string;
+    url: string;
+    title: string;
+  }>;
 }
 
 type Req = IncomingMessage & { method?: string; url?: string };
@@ -71,6 +76,7 @@ export default async function handler(req: Req, res: Res) {
         tabs: layout.tabs,
         widgets: layout.widgets,
         positions: layout.positions,
+        customLinks: layout.customLinks || [],
       });
     }
 
@@ -89,11 +95,13 @@ export default async function handler(req: Req, res: Res) {
           tabs: body.tabs || [],
           widgets: body.widgets || [],
           positions: body.positions || {},
+          customLinks: body.customLinks || [],
         },
         update: {
           tabs: body.tabs || [],
           widgets: body.widgets || [],
           positions: body.positions || {},
+          customLinks: body.customLinks || [],
         },
       });
 
@@ -101,6 +109,7 @@ export default async function handler(req: Req, res: Res) {
         tabs: updated.tabs,
         widgets: updated.widgets,
         positions: updated.positions,
+        customLinks: updated.customLinks || [],
       });
     }
 
