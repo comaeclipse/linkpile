@@ -2,6 +2,47 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Bookmark } from '../types';
 import { layoutService, LayoutData } from '../services/layoutService';
 
+// Helper to generate consistent color from domain
+const getColorFromDomain = (domain: string): string => {
+  let hash = 0;
+  for (let i = 0; i < domain.length; i++) {
+    hash = domain.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const colors = [
+    '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B',
+    '#10B981', '#06B6D4', '#6366F1', '#F97316'
+  ];
+  return colors[Math.abs(hash) % colors.length];
+};
+
+// Favicon component with letter fallback
+const FaviconWithFallback: React.FC<{ url: string }> = ({ url }) => {
+  const [failed, setFailed] = useState(false);
+  const domain = new URL(url).hostname;
+  const letter = domain.replace('www.', '')[0].toUpperCase();
+  const color = getColorFromDomain(domain);
+
+  if (failed) {
+    return (
+      <div
+        className="w-3 h-3 flex items-center justify-center text-[8px] font-bold text-white rounded-sm"
+        style={{ backgroundColor: color }}
+      >
+        {letter}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={`${new URL(url).origin}/favicon.ico`}
+      alt=""
+      className="w-3 h-3 opacity-50"
+      onError={() => setFailed(true)}
+    />
+  );
+};
+
 interface OrganizerProps {
   bookmarks: Bookmark[];
 }
@@ -602,12 +643,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
                 {bm.title}
               </div>
               <div className="text-[9px] text-gray-400 truncate pointer-events-none mt-1 flex gap-1">
-                <img
-                  src={`${new URL(bm.url).origin}/favicon.ico`}
-                  alt=""
-                  className="w-3 h-3 opacity-50"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
+                <FaviconWithFallback url={bm.url} />
                 {new URL(bm.url).hostname}
               </div>
             </div>
@@ -642,12 +678,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
                   {link.title}
                 </div>
                 <div className="text-[9px] text-gray-400 truncate pointer-events-none mt-1 flex gap-1">
-                  <img
-                    src={`${new URL(link.url).origin}/favicon.ico`}
-                    alt=""
-                    className="w-3 h-3 opacity-50"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
+                  <FaviconWithFallback url={link.url} />
                   {new URL(link.url).hostname}
                 </div>
               </div>
