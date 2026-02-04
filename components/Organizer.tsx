@@ -85,6 +85,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
   const [showCustomLinkDialog, setShowCustomLinkDialog] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
   const [customTitle, setCustomTitle] = useState('');
+  const [isFetchingTitle, setIsFetchingTitle] = useState(false);
 
   // Drag State
   const [isDragging, setIsDragging] = useState(false);
@@ -241,6 +242,31 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
     setSearchQuery('');
   };
 
+  // Fetch title from URL
+  const fetchTitleFromUrl = async (url: string) => {
+    if (!url.trim()) return;
+
+    try {
+      new URL(url); // Validate URL format
+    } catch {
+      return; // Invalid URL, don't fetch
+    }
+
+    setIsFetchingTitle(true);
+    try {
+      const response = await fetch(`/api/fetch-title?url=${encodeURIComponent(url)}`);
+      const data = await response.json();
+      
+      if (response.ok && data.title) {
+        setCustomTitle(data.title);
+      }
+    } catch (err) {
+      console.error('Failed to fetch title:', err);
+    } finally {
+      setIsFetchingTitle(false);
+    }
+  };
+
   // Add custom link (whiteboard-only bookmark)
   const addCustomLink = () => {
     if (!customUrl.trim() || !activeTabId) return;
@@ -272,6 +298,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
     setShowCustomLinkDialog(false);
     setCustomUrl('');
     setCustomTitle('');
+    setIsFetchingTitle(false);
   };
 
   const recentBookmarks = [...bookmarks]
@@ -528,23 +555,37 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">URL *</label>
-                <input
-                  autoFocus
-                  type="text"
-                  value={customUrl}
-                  onChange={(e) => setCustomUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
+                <div className="flex gap-2">
+                  <input
+                    autoFocus
+                    type="text"
+                    value={customUrl}
+                    onChange={(e) => setCustomUrl(e.target.value)}
+                    onBlur={() => fetchTitleFromUrl(customUrl)}
+                    placeholder="https://example.com"
+                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                  <button
+                    onClick={() => fetchTitleFromUrl(customUrl)}
+                    disabled={isFetchingTitle || !customUrl.trim()}
+                    className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-3 py-2 rounded text-sm font-medium transition-colors"
+                    title="Fetch page title and favicon"
+                  >
+                    {isFetchingTitle ? '...' : 'Fetch'}
+                  </button>
+                </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Title (optional)</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Title {isFetchingTitle && <span className="text-blue-500 animate-pulse">(fetching...)</span>}
+                </label>
                 <input
                   type="text"
                   value={customTitle}
                   onChange={(e) => setCustomTitle(e.target.value)}
-                  placeholder="Leave empty to use domain name"
+                  placeholder="Auto-filled from page title or domain name"
                   className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  disabled={isFetchingTitle}
                 />
               </div>
             </div>
@@ -560,6 +601,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
                   setShowCustomLinkDialog(false);
                   setCustomUrl('');
                   setCustomTitle('');
+                  setIsFetchingTitle(false);
                 }}
                 className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded font-semibold"
               >
