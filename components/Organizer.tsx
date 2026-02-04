@@ -223,6 +223,28 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
     }
   };
 
+  // Remove bookmark from whiteboard (doesn't delete the bookmark itself)
+  const removeBookmarkFromBoard = (id: string) => {
+    if (confirm('Remove this bookmark from the board?')) {
+      const updatedPositions = { ...positions };
+      delete updatedPositions[id];
+      setPositions(updatedPositions);
+      persistState(undefined, undefined, updatedPositions);
+    }
+  };
+
+  // Delete custom link entirely
+  const deleteCustomLink = (id: string) => {
+    if (confirm('Delete this custom link?')) {
+      const updatedLinks = customLinks.filter(link => link.id !== id);
+      const updatedPositions = { ...positions };
+      delete updatedPositions[id];
+      setCustomLinks(updatedLinks);
+      setPositions(updatedPositions);
+      persistState(undefined, undefined, updatedPositions, updatedLinks);
+    }
+  };
+
   // Add bookmark to active tab (creates/updates position)
   const addBookmarkToBoard = (bm: Bookmark) => {
     if (!activeTabId) return;
@@ -675,7 +697,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
                 zIndex: dragId === bm.id ? 50 : 20
               }}
               className={`
-                absolute cursor-move select-none
+                absolute cursor-move select-none group
                 bg-white border border-gray-300 shadow-sm hover:shadow-md
                 rounded px-3 py-2 w-[200px] transition-shadow
                 ${dragId === bm.id ? 'shadow-lg scale-105 border-blue-400' : ''}
@@ -688,6 +710,13 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
                 <FaviconWithFallback url={bm.url} />
                 {new URL(bm.url).hostname}
               </div>
+              <button
+                onClick={() => removeBookmarkFromBoard(bm.id)}
+                className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-200 transition-all pointer-events-auto"
+                title="Remove from board"
+              >
+                ×
+              </button>
             </div>
           );
         })}
@@ -710,7 +739,7 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
                   zIndex: dragId === link.id ? 50 : 20
                 }}
                 className={`
-                  absolute cursor-move select-none
+                  absolute cursor-move select-none group
                   bg-white border border-purple-300 shadow-sm hover:shadow-md
                   rounded px-3 py-2 w-[200px] transition-shadow
                   ${dragId === link.id ? 'shadow-lg scale-105 border-purple-400' : ''}
@@ -723,6 +752,13 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
                   <FaviconWithFallback url={link.url} />
                   {new URL(link.url).hostname}
                 </div>
+                <button
+                  onClick={() => deleteCustomLink(link.id)}
+                  className="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 hover:bg-red-200 transition-all pointer-events-auto"
+                  title="Delete custom link"
+                >
+                  ×
+                </button>
               </div>
             );
           })}
