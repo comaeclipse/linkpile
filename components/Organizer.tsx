@@ -276,14 +276,25 @@ export const Organizer: React.FC<OrganizerProps> = ({ bookmarks }) => {
 
     setIsFetchingTitle(true);
     try {
-      const response = await fetch(`/api/fetch-title?url=${encodeURIComponent(url)}`);
+      const API_BASE = import.meta.env.VITE_API_BASE || '';
+      const response = await fetch(
+        `${API_BASE}/api/fetch-title?url=${encodeURIComponent(url)}`,
+        { signal: AbortSignal.timeout(12000) } // 12 second timeout
+      );
+
+      if (!response.ok) {
+        console.warn('Failed to fetch title:', response.status, response.statusText);
+        return;
+      }
+
       const data = await response.json();
+      const pageTitle = data.title || '';
       
-      if (response.ok && data.title) {
-        setCustomTitle(data.title);
+      if (pageTitle) {
+        setCustomTitle(pageTitle.trim());
       }
     } catch (err) {
-      console.error('Failed to fetch title:', err);
+      console.warn('Failed to fetch title:', err);
     } finally {
       setIsFetchingTitle(false);
     }
